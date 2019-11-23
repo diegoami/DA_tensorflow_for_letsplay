@@ -1,128 +1,44 @@
 
-
 from __future__ import absolute_import, division, print_function, unicode_literals
-import tensorflow as tf
-AUTOTUNE = tf.data.experimental.AUTOTUNE
-import IPython.display as display
-from PIL import Image
-import numpy as np
-import matplotlib.pyplot as plt
-
+from keras.preprocessing.image import ImageDataGenerator
+import os
+import yaml
 import pathlib
-data_dir = '/media/diego/QData/youtube_out/frames/PLNP_nRm4k4jd-AJ0GwTPS1ld2YP8FdT4h_Wendy_-_Let_s_play_Mount_and_Blade/train'
-data_dir = pathlib.Path(data_dir)
-image_count = len(list(data_dir.glob('*/*.jpg')))
-CLASS_NAMES = np.array([item.name for item in data_dir.glob('*') if item.name != "LICENSE.txt"])
+from keras.models import load_model
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+import glob
+
+num_classes=3
 
 
-image_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
-BATCH_SIZE = 32
-IMG_HEIGHT = 224
-IMG_WIDTH = 224
-STEPS_PER_EPOCH = np.ceil(image_count/BATCH_SIZE)
-train_data_gen = image_generator.flow_from_directory(directory=str(data_dir),
-                                                     batch_size=BATCH_SIZE,
-                                                     shuffle=True,
-                                                     target_size=(IMG_HEIGHT, IMG_WIDTH),
-                                                     classes = list(CLASS_NAMES))
+with open('config.yml') as f:
+  config = yaml.safe_load(f)
 
-# In[15]:
+PATH = config['PATH']
+PATH_LIB = pathlib.Path(PATH)
 
+test_dir = os.path.join(PATH, 'test')
+validation_dir = os.path.join(PATH, 'validation')
 
-image_batch, label_batch = next(train_data_gen)
-list_ds = tf.data.Dataset.list_files(str(data_dir/'*/*'))
+total_test = len(list(pathlib.Path(test_dir).rglob('*.jpg')))
 
+batch_size = 128
+epochs = 15
+IMG_HEIGHT = 150
+IMG_WIDTH = 150
 
-def get_label(file_path):
-  # convert the path to a list of path components
-  parts = tf.strings.split(file_path, '/')
-  # The second to last is the class-directory
-  return parts[-2] == CLASS_NAMES
-
-def decode_img(img):
-  # convert the compressed string to a 3D uint8 tensor
-  img = tf.image.decode_jpeg(img, channels=3)
-  # Use `convert_image_dtype` to convert to floats in the [0,1] range.
-  img = tf.image.convert_image_dtype(img, tf.float32)
-  # resize the image to the desired size.
-  return tf.image.resize(img, [IMG_WIDTH, IMG_HEIGHT])
+model = load_model(os.path.join(PATH, 'model', 'mblade_categorizer.hdf5'))
+test_image_generator = ImageDataGenerator(rescale=1./255) # Generator for our training data
 
 
-def process_path(file_path):
-  label = get_label(file_path)
-  # load the raw data from the file as a string
-  img = tf.io.read_file(file_path)
-  img = decode_img(img)
-  return img, label
+test_data_gen = test_image_generator.flow_from_directory(batch_size=1,
+                                                           directory=os.path.join(test_dir),
+                                                           shuffle=False,
+                                                           target_size=(IMG_HEIGHT, IMG_WIDTH),
+                                                           class_mode='categorical')
 
-
-labeled_ds = list_ds.map(process_path, num_parallel_calls=AUTOTUNE)
-
-for image, label in labeled_ds.take(1):
-  print("Image shape: ", image.numpy().shape)
-  print("Label: ", label.numpy())
-
-
-
-def prepare_for_training(ds, cache=True, shuffle_buffer_size=1000):
-  # This is a small dataset, only load it once, and keep it in memory.
-  # use `.cache(filename)` to cache preprocessing work for datasets that don't
-  # fit in memory.
-  if cache:
-    if isinstance(cache, str):
-      ds = ds.cache(cache)
-    else:
-      ds = ds.cache()
-
-  ds = ds.shuffle(buffer_size=shuffle_buffer_size)
-
-  # Repeat forever
-  ds = ds.repeat()
-
-  ds = ds.batch(BATCH_SIZE)
-
-  # `prefetch` lets the dataset fetch batches in the background while the model
-  # is training.
-  ds = ds.prefetch(buffer_size=AUTOTUNE)
-
-  return ds
-
-train_ds = prepare_for_training(labeled_ds)
-
-image_batch, label_batch = next(iter(train_ds))
-
-
-
-import time
-default_timeit_steps = 1000
-
-def timeit(ds, steps=default_timeit_steps):
-  start = time.time()
-  it = iter(ds)
-  for i in range(steps):
-    batch = next(it)
-    if i%10 == 0:
-      print('.',end='')
-  print()
-  end = time.time()
-
-  duration = end-start
-  print("{} batches: {} s".format(steps, duration))
-  print("{:0.5f} Images/s".format(BATCH_SIZE*steps/duration))
-
-
-# `keras.preprocessing`
-timeit(train_data_gen)
-
-
-# `tf.data`
-timeit(train_ds)
-
-
-uncached_ds = prepare_for_training(labeled_ds, cache=False)
-timeit(uncached_ds)
-
-filecache_ds = prepare_for_training(labeled_ds, cache="./flowers.tfcache")
-timeit(filecache_ds)
-
-
+test_data_gen.reset()
+predict = model.predict_generator(test_data_gen, steps=total_test)
