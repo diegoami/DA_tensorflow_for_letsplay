@@ -5,11 +5,7 @@ import os
 import yaml
 import pathlib
 from keras.models import load_model
-import keras
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten
-from keras.layers import Conv2D, MaxPooling2D
-import glob
+from numpy import argmax
 
 num_classes=3
 
@@ -23,7 +19,9 @@ PATH_LIB = pathlib.Path(PATH)
 test_dir = os.path.join(PATH, 'test')
 validation_dir = os.path.join(PATH, 'validation')
 
-total_test = len(list(pathlib.Path(test_dir).rglob('*.jpg')))
+all_test_files = sorted(list(pathlib.Path(test_dir).rglob('*.jpg')))
+total_test = len(all_test_files)
+STATES = ['BATTLE', 'HIDEOUT', 'UNKNOWN']
 
 batch_size = 128
 epochs = 15
@@ -42,3 +40,20 @@ test_data_gen = test_image_generator.flow_from_directory(batch_size=1,
 
 test_data_gen.reset()
 predict = model.predict_generator(test_data_gen, steps=total_test)
+current_state = 2
+last_change = '00:00'
+prev_time = '00:00'
+for index in range(total_test):
+    current_file = os.path.basename(all_test_files[index])
+    episode, second_tot = map(int, (current_file.split('.')[0]).split('_')[1:3])
+    hour, minute, second = second_tot // 3600,  (second_tot // 60) % 60, second_tot % 60
+    time_tpl = map(str, (hour, minute, second)) if hour > 0 else map(str,(minute, second))
+
+    new_state = argmax(predict[index])
+    current_time = ':'.join([x.zfill(2) for x in time_tpl])
+    if new_state != current_state:
+        if STATES[current_state] != 'UNKNOWN':
+            print('{}-{}'.format(last_change, prev_time), STATES[current_state])
+        current_state = new_state
+        last_change = current_time
+    prev_time = current_time
