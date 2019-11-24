@@ -52,8 +52,7 @@ for index in range(total_test):
     new_state = argmax(predict[index])
     current_time = ':'.join([x.zfill(2) for x in time_tpl])
     if new_state != current_state:
-        if STATES[current_state] != 'UNKNOWN':
-            print('{}-{}'.format(last_change, prev_time), STATES[current_state])
+        print('{}-{}'.format(last_change, prev_time), STATES[current_state])
         current_state = new_state
         last_change = current_time
     prev_time = current_time
