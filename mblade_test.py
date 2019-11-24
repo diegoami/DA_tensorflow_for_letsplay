@@ -7,7 +7,7 @@ import pathlib
 from keras.models import load_model
 from numpy import argmax
 
-num_classes=3
+num_classes=6
 
 
 with open('config.yml') as f:
@@ -17,11 +17,11 @@ PATH = config['PATH']
 PATH_LIB = pathlib.Path(PATH)
 
 test_dir = os.path.join(PATH, 'test')
-validation_dir = os.path.join(PATH, 'validation')
+
 
 all_test_files = sorted(list(pathlib.Path(test_dir).rglob('*.jpg')))
 total_test = len(all_test_files)
-STATES = ['BATTLE', 'HIDEOUT', 'UNKNOWN']
+STATES = ['BATTLE', 'HIDEOUT', 'TOURNAMENT', 'TOWN', 'TRAINING', 'UNKNOWN']
 
 batch_size = 128
 epochs = 15

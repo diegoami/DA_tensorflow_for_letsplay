@@ -11,7 +11,7 @@ from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 import glob
 
-num_classes=3
+num_classes=6
 
 
 with open('config.yml') as f:
@@ -49,6 +49,11 @@ val_data_gen = validation_image_generator.flow_from_directory(batch_size=batch_s
                                                               directory=validation_dir,
                                                               target_size=(IMG_HEIGHT, IMG_WIDTH),
                                                               class_mode='categorical')
+
+print(train_data_gen.class_indices, train_data_gen.classes)
+print(val_data_gen.class_indices, val_data_gen.classes)
+
+
 
 model = Sequential()
 
