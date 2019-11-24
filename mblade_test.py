@@ -48,8 +48,12 @@ for index in range(total_test):
     episode, second_tot = map(int, (current_file.split('.')[0]).split('_')[1:3])
     hour, minute, second = second_tot // 3600,  (second_tot // 60) % 60, second_tot % 60
     time_tpl = map(str, (hour, minute, second)) if hour > 0 else map(str,(minute, second))
-
-    new_state = argmax(predict[index])
+    total_predict = predict[index]
+    if index > 0:
+        total_predict += predict[index-1]*0.5
+    if index < total_test-1:
+        total_predict += predict[index+1]*0.5
+    new_state = argmax(total_predict)
     current_time = ':'.join([x.zfill(2) for x in time_tpl])
     if new_state != current_state:
         print('{}-{}'.format(last_change, prev_time), STATES[current_state])
