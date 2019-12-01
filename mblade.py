@@ -10,6 +10,8 @@ with open('config.yml') as f:
   path = config['PATH']
   num_classes = config['NUM_CLASSES']
   model_name = config['MODEL_NAME']
+  states = config['STATES']
+  default_state = 5
 
-#do_train(path, num_classes, model_name)
-do_test(path, model_name)
+do_train(path, num_classes, model_name)
+do_test(path, model_name, states, default_state)

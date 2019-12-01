@@ -6,11 +6,11 @@ import pathlib
 from keras.models import load_model
 from numpy import argmax
 
-def do_test(path, model_name):
+
+def do_test(path, model_name, states, default_state):
     test_dir = os.path.join(path, 'test')
     all_test_files = sorted(list(pathlib.Path(test_dir).rglob('*.jpg')))
     total_test = len(all_test_files)
-    STATES = ['BATTLE', 'HIDEOUT', 'TOURNAMENT', 'TOWN', 'TRAINING', 'UNKNOWN']
     IMG_HEIGHT = 150
     IMG_WIDTH = 150
     model = load_model(os.path.join(path, 'model', model_name))
@@ -22,7 +22,7 @@ def do_test(path, model_name):
                                                              class_mode='categorical')
     test_data_gen.reset()
     predict = model.predict_generator(test_data_gen, steps=total_test)
-    current_state = 6
+    current_state = default_state
     last_change = '00:00'
     prev_time = '00:00'
     for index in range(total_test):
@@ -38,8 +38,8 @@ def do_test(path, model_name):
         new_state = argmax(predict[index])
         current_time = ':'.join([x.zfill(2) for x in time_tpl])
         if new_state != current_state:
-            if prev_time != last_change and STATES[current_state] != 'UNKNOWN':
-                print('{}-{}'.format(last_change, prev_time), STATES[current_state])
+            if prev_time != last_change and states[current_state] != states[default_state]:
+                print('{}-{}'.format(last_change, prev_time), states[current_state])
             current_state = new_state
             last_change = current_time
         prev_time = current_time
