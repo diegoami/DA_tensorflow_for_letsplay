@@ -1,1 +1,4 @@
-PATH: /media/diego/QData/youtube_out/frames/PLNP_nRm4k4jd-AJ0GwTPS1ld2YP8FdT4h_Wendy_-_Let_s_play_Mount_and_Blade/
+PATH: /media/diego/QData/youtube_out/frames/PLNP_nRm4k4jdEQ-OM31xNqeE64svvx-aT_CNN-Wendy/
+NUM_CLASSES: 6
+MODEL_NAME: mblade_categorizer.hdf5
+
