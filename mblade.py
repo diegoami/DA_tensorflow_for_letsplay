@@ -6,13 +6,12 @@ import sys
 
 
 with open('config.yml') as f:
-  config = yaml.safe_load(f)
-  path = config['PATH']
-  num_classes = config['NUM_CLASSES']
-  model_name = config['MODEL_NAME']
-  states = config['STATES']
-  default_state = 5
-
+    config = yaml.safe_load(f)
+    path = config['PATH']
+    num_classes = config['NUM_CLASSES']
+    model_name = config['MODEL_NAME']
+    states = config['STATES']
+    default_state = config['DEFAULT_STATE']
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -27,4 +26,4 @@ if __name__ == "__main__":
     if args.command in ['do_train', 'do_all']:
         do_train(path, num_classes, model_name)
     if args.command in ['do_test', 'do_all']:
-        do_test(path, model_name, states, default_state)
+        do_test(path=path, model_name=model_name, states=states, default_state=default_state)

@@ -8,6 +8,7 @@ from numpy import argmax
 
 IMG_HEIGHT = 150
 IMG_WIDTH = 150
+SIMPLE_STATES = {0: 'FIGHTS', 1: 'PEACE'}
 
 def retrieve_predict(model_name, path, total_test):
     test_dir = os.path.join(path, 'test')
@@ -23,6 +24,8 @@ def retrieve_predict(model_name, path, total_test):
     return predict
 
 def process_for_suggestion_list(episode, default_state, states):
+
+
     second_tot = 2
     current_state = default_state
     last_change = '00:02'
@@ -32,7 +35,7 @@ def process_for_suggestion_list(episode, default_state, states):
         time_tpl = map(str, (hour, minute, second)) if hour > 0 else map(str, (minute, second))
         current_time = ':'.join([x.zfill(2) for x in time_tpl])
         if retrieved_state != current_state:
-            if prev_time != last_change and states[current_state] != states[default_state]:
+            if prev_time != last_change and current_state != default_state:
                 print('{}-{}'.format(last_change, prev_time), states[current_state])
             current_state = retrieved_state
             last_change = current_time
@@ -46,6 +49,12 @@ def do_test(path, model_name, states, default_state):
     predict = retrieve_predict(model_name, path, total_test)
     episodes = get_state_list(all_test_files, predict)
     for episode_key in episodes:
+        print(f"================= {episode_key} ========================")
+        print(episodes[episode_key])
+        simple_episode = [1 if state == default_state else 0 for state in episodes[episode_key]]
+        print(simple_episode)
+
+        process_for_suggestion_list(simple_episode, 1, SIMPLE_STATES)
         print(f"================= {episode_key} ========================")
         process_for_suggestion_list(episodes[episode_key], default_state, states)
 
