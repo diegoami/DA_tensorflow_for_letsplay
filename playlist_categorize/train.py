@@ -10,6 +10,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, Flatten
 from keras.layers import Conv2D, MaxPooling2D
 
+IMG_HEIGHT = 150
+IMG_WIDTH = 150
 
 def do_train(path, num_classes, model_name):
     train_dir = os.path.join(path, 'train')
@@ -19,8 +21,7 @@ def do_train(path, num_classes, model_name):
     print(total_train, total_val)
     batch_size = 128
     epochs = 15
-    IMG_HEIGHT = 150
-    IMG_WIDTH = 150
+
     train_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our training data
     validation_image_generator = ImageDataGenerator(rescale=1. / 255)  # Generator for our validation data
     train_data_gen = train_image_generator.flow_from_directory(batch_size=batch_size,

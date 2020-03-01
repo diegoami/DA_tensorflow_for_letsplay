@@ -1,8 +1,8 @@
 import yaml
 from playlist_categorize.train import do_train
 from playlist_categorize.test import do_test
-
-
+import argparse
+import sys
 
 
 with open('config.yml') as f:
@@ -13,5 +13,18 @@ with open('config.yml') as f:
   states = config['STATES']
   default_state = 5
 
-do_train(path, num_classes, model_name)
-do_test(path, model_name, states, default_state)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('command', help='Subcommand to run')
+    args = parser.parse_args(sys.argv[1:2])
+    if args.command not in ['do_train', 'do_test', 'do_all']:
+        print('Unrecognized command')
+        parser.print_help()
+        exit(1)
+
+    if args.command in ['do_train', 'do_all']:
+        do_train(path, num_classes, model_name)
+    if args.command in ['do_test', 'do_all']:
+        do_test(path, model_name, states, default_state)
