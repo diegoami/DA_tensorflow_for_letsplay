@@ -21,15 +21,16 @@ def retrieve_predict(model_name, path, total_test):
                                                              class_mode='categorical')
     test_data_gen.reset()
     predict = model.predict_generator(test_data_gen, steps=total_test)
+
+
     return predict
 
 def process_for_suggestion_list(episode, default_state, states):
-
-
     second_tot = 2
     current_state = default_state
     last_change = '00:02'
     prev_time = '00:02'
+    skip = 0
     for retrieved_state in episode:
         hour, minute, second = second_tot // 3600, (second_tot // 60) % 60, second_tot % 60
         time_tpl = map(str, (hour, minute, second)) if hour > 0 else map(str, (minute, second))
@@ -47,6 +48,7 @@ def do_test(path, model_name, states, default_state):
     all_test_files = sorted(list(pathlib.Path(test_dir).rglob('*.jpg')))
     total_test = len(all_test_files)
     predict = retrieve_predict(model_name, path, total_test)
+    predict_fight = argmax(predict, axis=1)
     episodes = get_state_list(all_test_files, predict)
     for episode_key in episodes:
         print(f"================= {episode_key} ========================")
