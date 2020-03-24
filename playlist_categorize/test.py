@@ -4,7 +4,9 @@ from keras.preprocessing.image import ImageDataGenerator
 import os
 import pathlib
 from keras.models import load_model
-from numpy import argmax
+from numpy import argmax, hstack, apply_along_axis
+
+
 
 IMG_HEIGHT = 150
 IMG_WIDTH = 150
@@ -24,6 +26,19 @@ def retrieve_predict(model_name, path, total_test):
 
 
     return predict
+
+
+def res_column(row):
+
+    battle, hideout, siege, tournament, town, training, trap, unknown = [ int(row[x:x+1]*10) for x in range(0, 8) ]
+    result = 'B'*battle+'T'*tournament+'R'*training+'H'*hideout+'S'*siege+'P'*trap+'W'*town
+    return result
+
+def get_current_time(second_tot):
+    hour, minute, second = second_tot // 3600, (second_tot // 60) % 60, second_tot % 60
+    time_tpl = map(str, (hour, minute, second)) if hour > 0 else map(str, (minute, second))
+    current_time = ':'.join([x.zfill(2) for x in time_tpl])
+    return current_time
 
 def process_for_suggestion_list(episode, default_state, states):
     second_tot = 2
@@ -48,17 +63,29 @@ def do_test(path, model_name, states, default_state):
     all_test_files = sorted(list(pathlib.Path(test_dir).rglob('*.jpg')))
     total_test = len(all_test_files)
     predict = retrieve_predict(model_name, path, total_test)
-    predict_fight = argmax(predict, axis=1)
-    episodes = get_state_list(all_test_files, predict)
-    for episode_key in episodes:
-        print(f"================= {episode_key} ========================")
-        print(episodes[episode_key])
-        simple_episode = [1 if state == default_state else 0 for state in episodes[episode_key]]
-        print(simple_episode)
-
-        process_for_suggestion_list(simple_episode, 1, SIMPLE_STATES)
-        print(f"================= {episode_key} ========================")
-        process_for_suggestion_list(episodes[episode_key], default_state, states)
+    #str_to_shown = apply_along_axis(res_column, 1, predict)
+    current_episode = 0
+    for index in range(total_test):
+        current_file = os.path.basename(all_test_files[index])
+        episode, second_tot = map(int, (current_file.split('.')[0]).split('_')[1:3])
+        if (episode != current_episode):
+            current_episode = episode
+            print(f"================= {episode} ========================")
+        #all_probs = [f'{state}:{prob:.2f}' for state, prob in zip(states, predict[index]*10)]
+        all_probs = res_column(predict[index])
+        #all_probs = str_to_shown[index]
+        print(f'{get_current_time(second_tot)}: {all_probs}')
+    # predict_fight = argmax(predict, axis=1)
+    # episodes = get_state_list(all_test_files, predict)
+    # for episode_key in episodes:
+    #     print(f"================= {episode_key} ========================")
+    #     print(episodes[episode_key])
+    #     simple_episode = [1 if state == default_state else 0 for state in episodes[episode_key]]
+    #     print(simple_episode)
+    #
+    #     process_for_suggestion_list(simple_episode, 1, SIMPLE_STATES)
+    #     print(f"================= {episode_key} ========================")
+    #     process_for_suggestion_list(episodes[episode_key], default_state, states)
 
 
 def get_state_list(all_test_files,  predict):
